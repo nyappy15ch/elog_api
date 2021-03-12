@@ -1,20 +1,9 @@
 require 'line/bot'
 
 class ScoresController < ApplicationController
-  # protect_from_forgery with: :exception
-
-  def client
-    @client ||= Line::Bot::Client.new { |config|
-      config.channel_id = ENV["LINE_CHANNEL_ID"]
-      config.channel_secret = ENV["LINE_CHANNEL_SECRET"]
-      config.channel_token = ENV["LINE_CHANNEL_TOKEN"]
-    }
-  end
-
-
+  # protect_from_forgery except: :callback
   def callback
     body = request.body.read
-  
     signature = request.env['HTTP_X_LINE_SIGNATURE']
     unless client.validate_signature(body, signature)
       error 400 do 'Bad Request' end
@@ -31,6 +20,7 @@ class ScoresController < ApplicationController
             text: event.message['text']
           }
           client.reply_message(event['replyToken'], message)
+          binding.pry
         when Line::Bot::Event::MessageType::Image, Line::Bot::Event::MessageType::Video
           response = client.get_message_content(event.message['id'])
           tf = Tempfile.open("content")
@@ -41,5 +31,14 @@ class ScoresController < ApplicationController
   
     # Don't forget to return a successful response
     "OK"
+  end
+
+  private
+  def client
+    @client ||= Line::Bot::Client.new { |config|
+      config.channel_id = ENV["LINE_CHANNEL_ID"]
+      config.channel_secret = ENV["LINE_CHANNEL_SECRET"]
+      config.channel_token = ENV["LINE_CHANNEL_TOKEN"]
+    }
   end
 end
