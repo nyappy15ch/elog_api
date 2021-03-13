@@ -1,7 +1,7 @@
 require 'line/bot'
 
 class ScoresController < ApplicationController
-  # protect_from_forgery except: :callback
+  protect_from_forgery except: [:callback]
   def callback
     body = request.body.read
     signature = request.env['HTTP_X_LINE_SIGNATURE']
@@ -20,7 +20,6 @@ class ScoresController < ApplicationController
             text: event.message['text']
           }
           client.reply_message(event['replyToken'], message)
-          binding.pry
         when Line::Bot::Event::MessageType::Image, Line::Bot::Event::MessageType::Video
           response = client.get_message_content(event.message['id'])
           tf = Tempfile.open("content")
@@ -30,7 +29,7 @@ class ScoresController < ApplicationController
     end
   
     # Don't forget to return a successful response
-    "OK"
+    head :ok
   end
 
   private
